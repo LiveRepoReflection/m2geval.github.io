@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M²G-Eval - Leaderboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+            onerror="var msg = document.getElementById('loadingMessage'); if(msg) { msg.textContent = 'Chart.js failed to load from CDN'; msg.style.display = 'block'; msg.style.color = '#dc3545'; }"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding-top: 20px;
+        }
+        .navbar {
+            margin-bottom: 30px;
+        }
+        .footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .table-responsive {
+            margin-bottom: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .model-closed {
+            background-color: rgba(216, 238, 242, 0.3);
+        }
+        .model-open {
+            background-color: rgba(253, 235, 221, 0.3);
+        }
+        .model-ours {
+            background-color: rgba(223, 240, 216, 0.3);
+        }
+        .legend-item {
+            display: inline-block;
+            padding: 5px 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        .metrics-explanation {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .table th {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 1;
+        }
+        .top-model {
+            font-weight: bold;
+            color: #198754;
+        }
+        .model-ours-name {
+            font-weight: bold;
+            color: #495057;
+        }
+        .format-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #495057;
+            text-align: center;
+        }
+        #loadingMessage {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="home.html">M²G-Eval</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Leaderboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="text-center mb-4">M²G-Eval Leaderboard</h1>
+
+        <div class="d-flex justify-content-center gap-1 mb-3">
+            <a href="https://m2geval.github.io/home.html" class="btn btn-outline-secondary">🏠 Project Page</a>
+            <a href="https://m2geval.github.io/index.html" class="btn btn-outline-secondary">🏆 Leaderboard</a>
+            <a href="https://github.com/m2geval/m2geval-project" class="btn btn-outline-secondary">🐳 GitHub</a>
+            <a href="https://github.com/m2geval/m2geval-dataset" class="btn btn-outline-secondary">📊 Dataset</a>
+            <a href="#" class="btn btn-outline-secondary">📄 Paper (Coming Soon)</a>
+        </div>
+
+        <div class="metrics-explanation">
+            <h4>Metrics Explanation</h4>
+            <dl class="row">
+                <dt class="col-sm-2">Edit Similarity</dt>
+                <dd class="col-sm-10">
+                    <strong>Length-Normalized Edit Similarity:</strong>
+                    $$S = 1 - \frac{\text{ED}(\hat{y}, y^*)}{{\max(|\hat{y}|, |y^*|)}}$$
+                    where ED is the Levenshtein edit distance. Ranges from 0 to 1, with higher values indicating better performance.
+                </dd>
+
+                <dt class="col-sm-2">Granularities</dt>
+                <dd class="col-sm-10">Four levels of code generation complexity: Class (complete classes), Function (entire functions), Block (code blocks), and Line (single lines). Difficulty decreases from Class to Line.</dd>
+
+                <dt class="col-sm-2">Languages</dt>
+                <dd class="col-sm-10">18 programming languages supported, divided into full-granularity (11 languages) and partial-granularity (7 languages) groups.</dd>
+
+                <dt class="col-sm-2">Dataset</dt>
+                <dd class="col-sm-10">1,286 human-verified test cases for evaluation, plus 17,000+ training tasks in M²G-Eval-Instruct dataset.</dd>
+            </dl>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="legend text-center">
+                    <div class="legend-item model-closed">Closed-Source LLMs</div>
+                    <div class="legend-item model-open">Open-Source LLMs</div>
+                    <div class="legend-item model-ours">M²G-Eval-Coder (Ours)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Granularity Selector -->
+            <div class="col-12 mb-4">
+                <div class="text-center">
+                    <div class="btn-group" role="group" aria-label="Granularity selector">
+                        <button type="button" class="btn btn-outline-primary active" id="classBtn" onclick="selectGranularity('class')">Class</button>
+                        <button type="button" class="btn btn-outline-primary" id="functionBtn" onclick="selectGranularity('function')">Function</button>
+                        <button type="button" class="btn btn-outline-primary" id="blockBtn" onclick="selectGranularity('block')">Block</button>
+                        <button type="button" class="btn btn-outline-primary" id="lineBtn" onclick="selectGranularity('line')">Line</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Section -->
+            <div class="col-12">
+                <div class="format-section">
+                    <div class="format-title" id="granularityTitle">Class-Level Code Generation</div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="language-selector">
+                                <select class="form-select" id="languageSelector" onchange="selectLanguage(this.value)">
+                                    <option value="all" selected>All Languages (Average)</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="csharp">C#</option>
+                                    <option value="kotlin">Kotlin</option>
+                                    <option value="lua">Lua</option>
+                                    <option value="php">PHP</option>
+                                    <option value="scala">Scala</option>
+                                    <option value="swift">Swift</option>
+                                    <option value="zig">Zig</option>
+                                    <option value="c">C</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="go">Go</option>
+                                    <option value="html">HTML</option>
+                                    <option value="r">R</option>
+                                    <option value="rust">Rust</option>
+                                    <option value="verilog">Verilog</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-end">
+                                <small class="text-muted">Higher scores indicate better performance</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="loadingMessage">Loading chart...</div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-sm" id="leaderboardTable">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Model</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Class</th>
+                                    <th>Function</th>
+                                    <th>Block</th>
+                                    <th>Line</th>
+                                    <th>Average</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="text-center">
+                <p>M²G-Eval: Multi-granularity Multilingual Code Generation Evaluation</p>
+                <p><a href="https://m2geval.github.io">https://m2geval.github.io</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Hardcoded data directly in script tag -->
+    <script>
+        // M²G-Eval Model Performance Data - All hardcoded with FIXED types and sizes
+        const modelDataStore = {
+            all: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 18.2, function: 28.7, block: 35.4, line: 36.6, average: 29.7},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 26.1, function: 28.1, block: 25.6, line: 28.9, average: 27.2},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 15.7, function: 24.7, block: 26.4, line: 35.6, average: 25.6},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 17.8, function: 26.3, block: 24.9, line: 29.7, average: 24.7},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 15.0, function: 26.4, block: 26.3, line: 29.0, average: 24.2},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 15.4, function: 23.0, block: 25.4, line: 32.4, average: 24.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 18.3, function: 25.5, block: 24.3, line: 28.0, average: 24.0},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 15.0, function: 22.2, block: 25.1, line: 32.0, average: 23.6},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 16.0, function: 21.8, block: 25.0, line: 29.5, average: 23.1},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 13.1, function: 23.4, block: 25.8, line: 28.1, average: 22.6},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 14.8, function: 21.8, block: 22.8, line: 27.2, average: 21.6},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 14.3, function: 23.5, block: 21.1, line: 24.5, average: 20.9},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 13.5, function: 22.7, block: 21.6, line: 24.9, average: 20.7},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 14.5, function: 22.3, block: 19.2, line: 23.5, average: 19.9},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 12.3, function: 20.5, block: 18.4, line: 23.6, average: 18.7},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 11.8, function: 18.9, block: 17.6, line: 21.2, average: 17.4},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 13.1, function: 18.3, block: 17.1, line: 20.3, average: 17.2},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 12.9, function: 18.2, block: 16.9, line: 20.1, average: 17.0},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 10.0, function: 15.9, block: 21.3, line: 20.9, average: 17.0},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 13.2, function: 19.3, block: 18.5, line: 16.4, average: 16.9},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 9.4, function: 16.4, block: 18.9, line: 18.8, average: 15.9},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 9.7, function: 14.8, block: 18.7, line: 18.6, average: 15.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 9.4, function: 14.1, block: 16.0, line: 17.0, average: 14.1},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 4.9, function: 8.7, block: 9.2, line: 15.4, average: 9.6},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 2.8, function: 9.4, block: 9.1, line: 15.4, average: 9.2},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 7.5, function: 8.6, block: 9.2, line: 6.7, average: 8.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.6, function: 9.2, block: 7.9, line: 5.7, average: 7.3},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 5.9, function: 8.3, block: 8.3, line: 5.2, average: 6.9},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 3.6, function: 7.2, block: 4.7, line: 5.6, average: 5.3},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 3.6, function: 6.9, block: 4.8, line: 5.2, average: 5.1}
+            ],
+            python: [
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 25.6, function: 27.4, block: 20.8, line: 33.4, average: 26.8},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 13.0, function: 21.7, block: 19.8, line: 48.9, average: 25.9},
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 20.3, function: 29.8, block: 27.3, line: 25.9, average: 25.8},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 14.3, function: 22.0, block: 19.2, line: 42.5, average: 24.5},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 18.2, function: 22.1, block: 22.5, line: 34.5, average: 24.3},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 16.8, function: 25.0, block: 25.2, line: 28.8, average: 23.9},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 16.4, function: 22.3, block: 19.9, line: 35.9, average: 23.6},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 12.7, function: 23.2, block: 32.5, line: 26.2, average: 23.6},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 10.8, function: 22.0, block: 23.5, line: 38.2, average: 23.6},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 16.0, function: 19.0, block: 19.2, line: 39.0, average: 23.3},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 12.8, function: 20.9, block: 21.2, line: 38.2, average: 23.3},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 13.7, function: 20.4, block: 22.1, line: 36.4, average: 23.1},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 17.9, function: 23.0, block: 17.7, line: 30.5, average: 22.3},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 15.4, function: 19.9, block: 19.6, line: 34.2, average: 22.3},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 15.3, function: 23.0, block: 26.3, line: 23.9, average: 22.1},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 15.4, function: 21.3, block: 16.4, line: 31.9, average: 21.2},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 14.5, function: 20.6, block: 12.4, line: 27.1, average: 18.7},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 12.3, function: 19.8, block: 16.0, line: 23.8, average: 18.0},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 12.6, function: 16.7, block: 13.9, line: 23.8, average: 16.8},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 11.5, function: 14.3, block: 19.3, line: 20.0, average: 16.3},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 12.5, function: 17.8, block: 16.8, line: 14.8, average: 15.5},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 12.3, function: 18.5, block: 14.2, line: 15.0, average: 15.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 9.9, function: 13.9, block: 13.6, line: 16.6, average: 13.5},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 3.3, function: 3.7, block: 2.0, line: 29.6, average: 9.7},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 12.1, function: 10.4, block: 7.4, line: 7.4, average: 9.3},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 8.4, function: 10.7, block: 7.2, line: 6.3, average: 8.2},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 11.4, function: 10.4, block: 5.8, line: 4.3, average: 8.0},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 5.0, function: 8.5, block: 4.4, line: 7.7, average: 6.4},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 4.9, function: 8.2, block: 5.2, line: 7.0, average: 6.3},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 1.7, function: 7.2, block: 1.1, line: 12.7, average: 5.7}
+            ],
+            java: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 24.1, function: 35.0, block: 19.1, line: 27.8, average: 26.5},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 30.0, function: 33.2, block: 15.8, line: 24.9, average: 26.0},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 18.6, function: 27.8, block: 29.9, line: 25.9, average: 25.6},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 16.9, function: 26.1, block: 23.0, line: 24.9, average: 22.7},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 19.0, function: 31.1, block: 21.1, line: 17.7, average: 22.2},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 20.4, function: 31.4, block: 10.5, line: 24.4, average: 21.7},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 21.7, function: 30.0, block: 6.1, line: 26.9, average: 21.2},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 13.5, function: 28.3, block: 11.4, line: 26.6, average: 19.9},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 16.1, function: 22.4, block: 24.0, line: 13.7, average: 19.1},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 15.8, function: 24.2, block: 18.2, line: 18.2, average: 19.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 20.4, function: 33.2, block: 7.7, line: 14.8, average: 19.0},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 16.0, function: 25.8, block: 18.6, line: 14.4, average: 18.7},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 8.2, function: 26.2, block: 21.1, line: 19.4, average: 18.7},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 18.1, function: 27.4, block: 14.2, line: 13.9, average: 18.4},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 16.1, function: 24.8, block: 13.4, line: 18.5, average: 18.2},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 14.3, function: 28.5, block: 12.6, line: 15.2, average: 17.6},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 11.8, function: 22.2, block: 22.3, line: 13.8, average: 17.5},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 14.6, function: 26.1, block: 13.7, line: 15.4, average: 17.4},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 10.6, function: 22.0, block: 20.7, line: 15.2, average: 17.1},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 14.2, function: 23.3, block: 11.7, line: 15.8, average: 16.2},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 12.9, function: 17.6, block: 17.7, line: 13.8, average: 15.5},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 1.9, function: 11.4, block: 25.9, line: 16.0, average: 13.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 9.5, function: 17.5, block: 15.6, line: 9.3, average: 13.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 9.7, function: 15.9, block: 1.4, line: 12.9, average: 10.0},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 3.7, function: 8.6, block: 7.1, line: 18.4, average: 9.4},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 5.0, function: 8.5, block: 14.0, line: 3.4, average: 7.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.9, function: 9.5, block: 7.5, line: 3.6, average: 6.9},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 4.4, function: 7.2, block: 8.6, line: 3.6, average: 6.0},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 2.7, function: 4.9, block: 4.1, line: 3.2, average: 3.7},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 2.7, function: 6.0, block: 3.2, line: 2.1, average: 3.5}
+            ],
+            javascript: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 10.4, function: 26.4, block: 23.9, line: 39.9, average: 25.1},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 19.9, function: 24.3, block: 21.5, line: 32.0, average: 24.4},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 10.9, function: 23.4, block: 20.8, line: 41.6, average: 24.2},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 11.7, function: 23.9, block: 19.7, line: 36.6, average: 23.0},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 9.5, function: 20.9, block: 16.7, line: 31.9, average: 19.8},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 7.6, function: 25.9, block: 17.4, line: 24.0, average: 18.7},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 9.9, function: 18.1, block: 19.0, line: 27.3, average: 18.6},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 6.8, function: 23.3, block: 21.1, line: 22.9, average: 18.5},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 8.2, function: 19.7, block: 15.2, line: 27.0, average: 17.5},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 9.1, function: 18.6, block: 16.6, line: 25.7, average: 17.5},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 10.0, function: 19.3, block: 19.7, line: 20.5, average: 17.4},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 8.5, function: 19.7, block: 18.5, line: 22.4, average: 17.3},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 10.1, function: 20.8, block: 18.7, line: 18.7, average: 17.1},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 8.3, function: 21.6, block: 18.0, line: 19.2, average: 16.8},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 9.9, function: 19.7, block: 18.3, line: 18.7, average: 16.6},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 8.3, function: 18.2, block: 15.0, line: 22.1, average: 15.9},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 9.2, function: 16.2, block: 18.4, line: 15.6, average: 14.8},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 7.6, function: 17.5, block: 12.9, line: 19.9, average: 14.5},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 6.9, function: 14.6, block: 18.1, line: 17.4, average: 14.2},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 7.2, function: 18.9, block: 13.5, line: 16.6, average: 14.1},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 2.6, function: 21.2, block: 8.2, line: 19.4, average: 12.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 4.5, function: 13.7, block: 16.8, line: 16.0, average: 12.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 5.6, function: 16.4, block: 18.7, line: 9.7, average: 12.6},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 6.1, function: 18.6, block: 12.7, line: 9.7, average: 11.8},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 4.7, function: 16.4, block: 3.3, line: 11.7, average: 9.0},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 1.3, function: 3.9, block: 5.2, line: 16.7, average: 6.8},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 7.5, function: 9.9, block: 6.0, line: 2.3, average: 6.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.0, function: 9.3, block: 4.6, line: 4.3, average: 6.0},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 6.3, function: 7.2, block: 4.6, line: 4.7, average: 5.7},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 1.3, function: 6.4, block: 3.8, line: 9.8, average: 5.3}
+            ],
+            typescript: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 24.4, function: 28.6, block: 37.4, line: 37.4, average: 31.9},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 30.9, function: 30.0, block: 25.3, line: 30.2, average: 29.1},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 16.9, function: 22.4, block: 31.8, line: 34.1, average: 26.3},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 17.2, function: 24.4, block: 30.3, line: 31.2, average: 25.8},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 14.5, function: 24.9, block: 38.6, line: 32.9, average: 27.7},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 14.2, function: 20.1, block: 17.5, line: 29.0, average: 20.2},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 16.4, function: 21.6, block: 34.6, line: 29.7, average: 25.6},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 14.3, function: 23.5, block: 24.5, line: 24.9, average: 21.8},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 19.3, function: 20.4, block: 28.4, line: 37.0, average: 26.3},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 13.3, function: 20.5, block: 33.8, line: 26.1, average: 23.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 14.4, function: 20.8, block: 21.0, line: 27.9, average: 21.0},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 11.5, function: 22.2, block: 24.9, line: 30.1, average: 22.2},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 11.4, function: 19.2, block: 42.3, line: 26.8, average: 24.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 15.9, function: 19.6, block: 16.6, line: 34.2, average: 21.6},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 10.6, function: 19.7, block: 33.9, line: 25.8, average: 22.5},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 12.6, function: 20.1, block: 16.4, line: 28.9, average: 19.5},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 10.5, function: 14.1, block: 7.9, line: 27.7, average: 15.1},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 13.1, function: 14.1, block: 6.0, line: 24.3, average: 14.4},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 11.5, function: 16.8, block: 27.0, line: 23.8, average: 19.8},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 14.1, function: 18.2, block: 22.9, line: 22.0, average: 19.3},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 8.8, function: 12.8, block: 13.4, line: 25.7, average: 15.2},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 8.4, function: 12.6, block: 13.4, line: 17.8, average: 13.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 7.1, function: 13.0, block: 16.0, line: 18.3, average: 13.6},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 10.9, function: 6.8, block: 0.0, line: 8.3, average: 6.5},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 9.5, function: 3.7, block: 0.0, line: 21.8, average: 8.8},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 5.9, function: 10.6, block: 16.4, line: 6.3, average: 9.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.9, function: 8.7, block: 0.8, line: 8.0, average: 6.1},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 4.9, function: 9.6, block: 14.6, line: 4.7, average: 8.4},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 3.7, function: 6.0, block: 0.4, line: 5.8, average: 4.0},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 5.4, function: 5.8, block: 0.0, line: 3.8, average: 3.8}
+            ],
+            kotlin: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 23.7, function: 28.9, block: 45.2, line: 33.0, average: 32.7},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 26.5, function: 32.0, block: 27.1, line: 32.0, average: 29.4},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 20.1, function: 16.1, block: 10.5, line: 36.9, average: 20.9},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 21.3, function: 25.2, block: 11.6, line: 42.9, average: 25.2},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 21.7, function: 31.3, block: 29.1, line: 28.7, average: 27.7},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 25.8, function: 25.0, block: 33.5, line: 40.8, average: 31.3},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 22.5, function: 23.7, block: 9.0, line: 36.6, average: 22.9},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 17.6, function: 19.3, block: 36.6, line: 33.6, average: 26.8},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 20.3, function: 17.2, block: 6.2, line: 28.2, average: 18.0},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 17.9, function: 22.1, block: 46.9, line: 22.0, average: 27.2},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 16.8, function: 19.8, block: 35.4, line: 32.5, average: 26.1},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 18.7, function: 20.5, block: 10.0, line: 30.3, average: 19.9},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 17.6, function: 23.4, block: 3.5, line: 28.8, average: 18.3},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 22.4, function: 20.0, block: 26.3, line: 42.9, average: 27.9},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 13.7, function: 18.5, block: 16.2, line: 20.4, average: 17.2},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 16.1, function: 20.9, block: 20.2, line: 42.9, average: 25.0},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 16.1, function: 18.8, block: 6.5, line: 34.7, average: 19.0},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 16.9, function: 18.7, block: 9.0, line: 34.7, average: 19.8},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 16.0, function: 14.7, block: 36.9, line: 22.4, average: 22.5},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 16.6, function: 18.7, block: 30.8, line: 28.7, average: 23.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 10.8, function: 15.6, block: 34.4, line: 27.1, average: 22.0},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 10.4, function: 13.9, block: 36.4, line: 12.6, average: 18.3},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 11.5, function: 16.4, block: 12.5, line: 49.0, average: 22.4},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 6.4, function: 5.6, block: 32.2, line: 0.0, average: 11.1},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.6, function: 1.3, block: 0.0, line: 0.0, average: 0.5},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 10.9, function: 8.0, block: 2.1, line: 1.8, average: 5.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.5, function: 6.1, block: 9.1, line: 0, average: 7.2},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 10.0, function: 6.4, block: 1.7, line: 0.0, average: 4.5},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 5.6, function: 8.0, block: 6.1, line: 5.8, average: 6.4},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 6.1, function: 6.3, block: 6.4, line: 0.0, average: 4.7}
+            ],
+            lua: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 40.9, function: 23.0, block: 36.6, line: 13.8, average: 28.6},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 31.0, function: 21.8, block: 30.7, line: 15.4, average: 24.7},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 37.2, function: 21.8, block: 26.4, line: 14.2, average: 24.9},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 30.9, function: 19.6, block: 24.5, line: 11.7, average: 21.7},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 28.9, function: 22.3, block: 28.9, line: 11.7, average: 22.9},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 23.4, function: 20.9, block: 31.7, line: 8.2, average: 21.0},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 30.2, function: 21.9, block: 28.0, line: 18.5, average: 24.6},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 31.8, function: 19.6, block: 27.6, line: 16.2, average: 23.8},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 35.1, function: 22.3, block: 28.5, line: 21.6, average: 26.9},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 29.3, function: 21.2, block: 22.3, line: 15.0, average: 21.9},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 27.7, function: 19.4, block: 27.6, line: 13.6, average: 22.1},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 32.5, function: 19.7, block: 15.2, line: 9.5, average: 19.2},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 25.7, function: 19.3, block: 16.6, line: 8.0, average: 17.4},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 19.6, function: 13.8, block: 13.1, line: 7.7, average: 13.6},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 22.3, function: 18.4, block: 20.3, line: 9.7, average: 17.7},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 21.3, function: 15.8, block: 11.9, line: 11.6, average: 15.2},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 19.5, function: 17.6, block: 19.0, line: 10.3, average: 16.6},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 17.0, function: 17.8, block: 17.1, line: 13.2, average: 16.3},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 23.2, function: 12.5, block: 20.2, line: 11.8, average: 16.9},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 23.0, function: 17.5, block: 14.3, line: 11.9, average: 16.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 28.4, function: 16.4, block: 16.4, line: 13.1, average: 18.6},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 30.8, function: 15.0, block: 15.8, line: 11.1, average: 18.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 21.4, function: 13.2, block: 18.1, line: 13.2, average: 16.5},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 17.2, function: 4.9, block: 13.8, line: 7.2, average: 10.8},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 10.2, function: 14.3, block: 6.4, line: 0.0, average: 7.7},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 12.9, function: 8.2, block: 8.5, line: 5.7, average: 8.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 9.6, function: 7.9, block: 7.3, line: 7.9, average: 8.2},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 8.9, function: 6.4, block: 11.0, line: 7.5, average: 8.4},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 8.8, function: 7.9, block: 8.3, line: 5.1, average: 7.5},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 8.2, function: 7.4, block: 8.7, line: 3.8, average: 7.0}
+            ],
+            php: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 21.3, function: 37.2, block: 46.0, line: 21.6, average: 31.5},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 35.2, function: 27.6, block: 34.8, line: 19.6, average: 29.3},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 17.9, function: 28.6, block: 54.3, line: 31.8, average: 33.1},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 25.0, function: 32.8, block: 31.5, line: 22.0, average: 27.8},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 10.7, function: 22.8, block: 21.6, line: 11.9, average: 16.8},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 21.8, function: 23.5, block: 32.3, line: 6.6, average: 21.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 20.2, function: 30.8, block: 26.8, line: 16.8, average: 23.6},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 17.0, function: 24.8, block: 34.5, line: 36.5, average: 28.2},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 18.7, function: 23.2, block: 30.3, line: 17.3, average: 22.4},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 13.3, function: 20.3, block: 35.1, line: 15.8, average: 21.1},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 17.5, function: 23.8, block: 31.7, line: 36.2, average: 27.3},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 16.5, function: 20.3, block: 27.8, line: 30.1, average: 23.7},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 15.5, function: 21.2, block: 27.8, line: 31.3, average: 23.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 20.0, function: 21.5, block: 35.0, line: 13.4, average: 22.5},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 18.5, function: 17.4, block: 16.1, line: 17.0, average: 17.2},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 14.7, function: 17.3, block: 36.2, line: 10.2, average: 19.6},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 14.5, function: 21.0, block: 19.7, line: 16.9, average: 18.0},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 15.4, function: 20.5, block: 28.1, line: 14.9, average: 19.7},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 2.2, function: 18.9, block: 24.5, line: 16.0, average: 15.4},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 15.1, function: 16.8, block: 18.2, line: 13.7, average: 15.9},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 8.0, function: 19.1, block: 29.3, line: 18.0, average: 18.6},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 7.5, function: 14.9, block: 33.6, line: 10.1, average: 16.5},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 7.3, function: 15.1, block: 21.4, line: 25.9, average: 17.4},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0.4, function: 10.4, block: 1.5, line: 19.1, average: 7.9},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.0, function: 19.8, block: 17.5, line: 9.4, average: 11.7},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 8.5, function: 9.2, block: 13.1, line: 5.7, average: 9.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 7.6, function: 9.1, block: 20.8, line: 9.4, average: 11.7},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 5.6, function: 7.3, block: 9.7, line: 5.2, average: 6.9},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 1.7, function: 5.2, block: 4.5, line: 5.4, average: 4.2},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 1.7, function: 4.6, block: 2.6, line: 9.8, average: 4.7}
+            ],
+            scala: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 19.5, function: 27.9, block: 30.1, line: 50.8, average: 32.1},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 22.3, function: 33.4, block: 24.6, line: 27.0, average: 26.8},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 13.5, function: 27.5, block: 19.4, line: 26.7, average: 21.8},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 16.3, function: 25.7, block: 11.2, line: 19.1, average: 18.1},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 17.0, function: 26.6, block: 20.7, line: 26.2, average: 22.6},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 18.9, function: 13.3, block: 16.2, line: 30.1, average: 19.6},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 15.9, function: 31.0, block: 14.2, line: 24.3, average: 21.4},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 12.6, function: 21.9, block: 13.0, line: 23.0, average: 17.6},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 16.6, function: 25.8, block: 19.7, line: 37.2, average: 24.8},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 13.2, function: 25.5, block: 15.7, line: 31.0, average: 21.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 12.8, function: 19.3, block: 9.7, line: 22.7, average: 16.1},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 14.0, function: 27.1, block: 15.5, line: 24.7, average: 20.3},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 15.3, function: 23.1, block: 11.5, line: 21.7, average: 17.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 13.6, function: 24.0, block: 16.1, line: 12.1, average: 16.4},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 10.9, function: 28.3, block: 16.3, line: 25.6, average: 20.3},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 13.4, function: 21.3, block: 13.5, line: 18.8, average: 16.8},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 11.9, function: 21.5, block: 10.5, line: 19.3, average: 15.8},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 11.1, function: 24.7, block: 12.4, line: 15.1, average: 15.8},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 8.1, function: 13.0, block: 11.5, line: 15.6, average: 12.1},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 14.0, function: 22.9, block: 14.2, line: 11.1, average: 15.5},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 7.1, function: 13.4, block: 15.5, line: 18.6, average: 13.7},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 7.6, function: 13.4, block: 21.7, line: 21.4, average: 16.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 9.8, function: 15.5, block: 10.0, line: 9.6, average: 11.2},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 6.0, function: 10.1, block: 7.6, line: 8.9, average: 8.2},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.0, function: 0.0, block: 15.1, line: 9.2, average: 6.1},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 5.1, function: 5.1, block: 6.3, line: 6.2, average: 5.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 6.8, function: 14.4, block: 9.4, line: 4.8, average: 8.8},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 5.5, function: 2.9, block: 4.6, line: 6.9, average: 5.0},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 6.6, function: 6.8, block: 5.0, line: 5.3, average: 5.9},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 5.8, function: 5.7, block: 6.3, line: 8.5, average: 6.6}
+            ],
+            swift: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 22.5, function: 28.3, block: 32.2, line: 21.8, average: 26.2},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 21.4, function: 27.0, block: 25.5, line: 28.8, average: 25.7},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 19.6, function: 23.5, block: 20.0, line: 23.3, average: 21.6},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 20.5, function: 24.5, block: 18.9, line: 17.4, average: 20.3},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 18.9, function: 28.5, block: 23.4, line: 25.6, average: 24.1},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 35.0, function: 29.9, block: 26.6, line: 37.1, average: 32.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 26.5, function: 28.4, block: 23.0, line: 33.6, average: 27.9},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 18.4, function: 23.0, block: 24.5, line: 26.9, average: 23.2},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 17.7, function: 25.0, block: 23.6, line: 14.7, average: 20.2},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 17.4, function: 26.4, block: 19.8, line: 22.1, average: 21.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 17.4, function: 22.6, block: 13.8, line: 28.7, average: 20.6},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 16.4, function: 25.4, block: 18.1, line: 19.9, average: 19.9},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 16.9, function: 29.0, block: 21.4, line: 15.4, average: 20.7},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 16.5, function: 14.6, block: 17.9, line: 21.5, average: 17.6},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 15.2, function: 20.4, block: 19.1, line: 16.2, average: 17.7},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 17.3, function: 15.7, block: 14.8, line: 22.4, average: 17.6},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 14.1, function: 14.2, block: 15.7, line: 10.1, average: 13.5},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 15.3, function: 14.1, block: 18.3, line: 4.7, average: 13.1},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 11.5, function: 17.8, block: 20.8, line: 12.5, average: 15.7},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 20.6, function: 14.3, block: 15.2, line: 15.3, average: 16.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 9.5, function: 12.3, block: 20.7, line: 18.8, average: 15.3},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 15.7, function: 13.2, block: 13.9, line: 4.8, average: 11.9},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 8.7, function: 12.1, block: 15.8, line: 11.8, average: 12.1},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0.1, function: 4.6, block: 14.7, line: 11.5, average: 7.7},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.0, function: 3.9, block: 11.1, line: 0.0, average: 3.8},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 8.3, function: 6.4, block: 8.5, line: 7.5, average: 7.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 8.9, function: 7.7, block: 7.5, line: 4.6, average: 7.2},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 5.8, function: 6.7, block: 7.2, line: 3.6, average: 5.8},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 4.1, function: 4.8, block: 4.5, line: 10.3, average: 5.9},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 3.6, function: 4.3, block: 4.6, line: 6.7, average: 4.8}
+            ],
+            zig: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 1.5, function: 24.7, block: 48.3, line: 46.2, average: 30.2},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 11.0, function: 24.2, block: 26.8, line: 29.0, average: 22.8},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 7.4, function: 19.8, block: 13.2, line: 39.3, average: 19.9},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 18.8, function: 35.2, block: 23.4, line: 38.7, average: 29.0},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 19.9, function: 32.3, block: 25.3, line: 37.6, average: 28.8},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 1.5, function: 25.3, block: 28.1, line: 30.8, average: 21.4},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 20.7, function: 19.7, block: 21.3, line: 29.9, average: 22.9},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 10.7, function: 17.4, block: 29.3, line: 16.0, average: 18.4},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 16.1, function: 11.9, block: 22.9, line: 37.1, average: 22.0},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 1.5, function: 23.8, block: 22.4, line: 30.0, average: 19.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 16.3, function: 21.8, block: 32.9, line: 18.9, average: 22.5},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 13.4, function: 24.6, block: 21.7, line: 21.2, average: 20.2},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 9.3, function: 23.3, block: 20.2, line: 34.9, average: 21.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 1.4, function: 31.7, block: 25.0, line: 14.0, average: 18.0},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 6.1, function: 13.0, block: 9.7, line: 25.5, average: 13.6},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 4.3, function: 10.1, block: 13.5, line: 11.6, average: 9.9},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 19.8, function: 10.3, block: 20.0, line: 25.4, average: 18.9},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 18.2, function: 9.1, block: 16.0, line: 14.8, average: 14.5},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 22.9, function: 6.9, block: 27.6, line: 20.5, average: 19.5},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 8.0, function: 13.3, block: 14.7, line: 13.5, average: 12.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 9.0, function: 13.6, block: 20.3, line: 20.5, average: 15.8},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 1.5, function: 9.6, block: 14.3, line: 20.9, average: 11.6},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 18.1, function: 6.8, block: 30.9, line: 8.2, average: 16.0},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 11.1, function: 8.1, block: 10.6, line: 10.9, average: 10.2},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 1.4, function: 0.0, block: 11.9, line: 13.5, average: 6.7},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 8.7, function: 6.4, block: 13.5, line: 8.0, average: 9.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 2.1, block: 11.6, line: 0.0, average: 4.6},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 1.4, function: 4.9, block: 16.4, line: 7.8, average: 7.6},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0.8, function: 4.0, block: 7.0, line: 2.4, average: 3.5},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0.2, function: 2.2, block: 6.3, line: 0.9, average: 2.4}
+            ],
+            c: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 0, function: 35.4, block: 47.0, line: 0, average: 41.2},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 0, function: 29.8, block: 25.6, line: 0, average: 27.7},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 0, function: 23.5, block: 43.1, line: 0, average: 33.3},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 0, function: 26.2, block: 31.9, line: 0, average: 29.0},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 0, function: 23.8, block: 29.4, line: 0, average: 26.6},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0, function: 27.3, block: 28.1, line: 0, average: 27.7},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 0, function: 28.6, block: 31.6, line: 0, average: 30.1},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 0, function: 24.6, block: 27.8, line: 0, average: 26.2},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 0, function: 22.3, block: 44.9, line: 0, average: 33.6},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 0, function: 25.9, block: 35.1, line: 0, average: 30.5},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 0, function: 21.4, block: 27.0, line: 0, average: 24.2},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 0, function: 25.8, block: 30.1, line: 0, average: 28.0},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 0, function: 24.4, block: 29.6, line: 0, average: 27.0},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 0, function: 30.4, block: 17.2, line: 0, average: 23.8},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 0, function: 22.5, block: 15.3, line: 0, average: 18.9},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 0, function: 23.9, block: 16.3, line: 0, average: 20.1},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 0, function: 14.9, block: 15.5, line: 0, average: 15.2},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 0, function: 14.5, block: 17.2, line: 0, average: 15.8},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0, function: 8.2, block: 28.2, line: 0, average: 18.2},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 0, function: 22.6, block: 16.2, line: 0, average: 19.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 0, function: 18.8, block: 18.1, line: 0, average: 18.5},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 0, function: 11.5, block: 24.7, line: 0, average: 18.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 0, function: 8.9, block: 10.7, line: 0, average: 9.8},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0, function: 3.4, block: 5.5, line: 0, average: 4.5},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0, function: 15.4, block: 9.1, line: 0, average: 12.2},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 0, function: 6.6, block: 7.2, line: 0, average: 6.9},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 11.2, block: 6.0, line: 0, average: 8.6},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 0, function: 7.2, block: 10.9, line: 0, average: 9.1},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0, function: 7.0, block: 3.2, line: 0, average: 5.1},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0, function: 7.7, block: 5.3, line: 0, average: 6.5}
+            ],
+            cpp: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 5.0, function: 21.9, block: 51.2, line: 0, average: 26.0},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 30.1, function: 28.6, block: 26.2, line: 0, average: 28.3},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 8.2, function: 22.3, block: 28.3, line: 0, average: 19.6},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 7.5, function: 26.0, block: 41.4, line: 0, average: 25.0},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 10.8, function: 24.9, block: 38.0, line: 0, average: 24.6},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 11.6, function: 18.4, block: 27.5, line: 0, average: 19.2},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 14.1, function: 24.5, block: 38.1, line: 0, average: 25.6},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 7.8, function: 21.9, block: 23.9, line: 0, average: 17.9},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 6.4, function: 21.0, block: 31.2, line: 0, average: 19.5},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 6.5, function: 21.3, block: 25.0, line: 0, average: 17.6},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 7.6, function: 18.1, block: 21.8, line: 0, average: 15.8},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 6.2, function: 23.3, block: 31.5, line: 0, average: 20.3},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 6.4, function: 21.3, block: 28.9, line: 0, average: 18.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 7.1, function: 17.4, block: 28.0, line: 0, average: 17.5},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 7.6, function: 22.8, block: 22.8, line: 0, average: 17.7},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 8.3, function: 18.1, block: 22.0, line: 0, average: 16.1},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 5.6, function: 15.6, block: 20.5, line: 0, average: 13.9},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 4.1, function: 13.8, block: 9.5, line: 0, average: 9.1},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 2.1, function: 13.0, block: 28.1, line: 0, average: 14.4},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 7.5, function: 16.9, block: 28.4, line: 0, average: 17.6},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 4.1, function: 15.6, block: 25.5, line: 0, average: 15.1},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 4.6, function: 8.4, block: 17.8, line: 0, average: 10.3},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 3.5, function: 11.4, block: 12.7, line: 0, average: 9.2},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 1.6, function: 10.9, block: 3.4, line: 0, average: 5.3},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.2, function: 11.8, block: 3.3, line: 0, average: 5.1},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 2.4, function: 3.4, block: 10.6, line: 0, average: 5.5},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 2.1, function: 10.3, block: 6.8, line: 0, average: 6.4},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 3.3, function: 4.5, block: 5.4, line: 0, average: 4.4},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 4.1, function: 12.1, block: 5.5, line: 0, average: 7.2},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 4.0, function: 12.1, block: 2.7, line: 0, average: 6.3}
+            ],
+            csharp: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 12.7, function: 31.7, block: 36.8, line: 67.3, average: 37.1},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 31.0, function: 30.0, block: 29.3, line: 47.6, average: 34.5},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 12.2, function: 35.0, block: 31.4, line: 71.4, average: 37.5},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 13.9, function: 28.3, block: 28.2, line: 45.2, average: 28.9},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 9.2, function: 29.5, block: 27.6, line: 0, average: 22.1},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 9.4, function: 29.3, block: 21.5, line: 67.3, average: 31.9},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 12.6, function: 29.0, block: 33.1, line: 45.2, average: 30.0},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 13.5, function: 21.7, block: 27.9, line: 73.8, average: 34.2},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 9.9, function: 22.2, block: 25.8, line: 42.4, average: 25.1},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 8.9, function: 29.4, block: 23.6, line: 59.5, average: 30.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 13.5, function: 24.6, block: 23.9, line: 32.4, average: 23.6},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 8.2, function: 24.4, block: 21.7, line: 27.1, average: 20.4},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 10.5, function: 23.9, block: 25.4, line: 23.1, average: 20.7},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 22.7, function: 27.9, block: 19.9, line: 50.0, average: 30.1},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 9.2, function: 19.3, block: 17.8, line: 38.2, average: 21.1},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 8.0, function: 22.0, block: 21.3, line: 9.4, average: 15.2},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 11.9, function: 23.1, block: 22.1, line: 9.4, average: 16.6},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 9.1, function: 23.3, block: 26.3, line: 9.4, average: 17.0},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 4.6, function: 21.2, block: 28.3, line: 61.9, average: 29.0},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 12.3, function: 23.6, block: 21.0, line: 9.4, average: 16.6},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 5.1, function: 19.2, block: 18.6, line: 6.5, average: 12.3},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 6.5, function: 13.1, block: 19.9, line: 52.4, average: 23.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 8.0, function: 15.9, block: 16.9, line: 5.8, average: 11.7},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0.0, function: 0.0, block: 1.5, line: 66.7, average: 17.1},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 5.9, function: 5.8, block: 7.6, line: 40.0, average: 14.8},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 6.2, function: 7.4, block: 13.4, line: 9.4, average: 9.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 5.2, function: 9.8, block: 10.1, line: 0, average: 8.4},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 3.4, function: 9.0, block: 8.2, line: 0.0, average: 5.1},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 1.1, function: 7.1, block: 1.6, line: 2.4, average: 3.0},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 1.2, function: 6.7, block: 3.7, line: 2.4, average: 3.5}
+            ],
+            go: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 0, function: 25.4, block: 21.0, line: 47.8, average: 31.4},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 0, function: 27.0, block: 19.0, line: 27.8, average: 24.6},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 0, function: 24.1, block: 14.0, line: 49.7, average: 29.3},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 0, function: 26.6, block: 19.0, line: 20.8, average: 22.1},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 0, function: 23.4, block: 18.0, line: 38.0, average: 26.5},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0, function: 20.5, block: 14.0, line: 30.9, average: 21.8},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 0, function: 24.4, block: 18.0, line: 21.9, average: 21.4},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 0, function: 19.8, block: 15.0, line: 36.7, average: 23.8},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 0, function: 23.4, block: 27.0, line: 39.4, average: 29.9},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 0, function: 24.7, block: 9.0, line: 25.9, average: 19.9},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 0, function: 18.2, block: 13.4, line: 24.0, average: 18.5},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 0, function: 20.4, block: 10.0, line: 33.5, average: 21.3},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 0, function: 19.9, block: 9.0, line: 23.1, average: 17.3},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 0, function: 20.4, block: 7.0, line: 17.2, average: 14.9},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 0, function: 21.0, block: 9.0, line: 22.3, average: 17.4},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 0, function: 17.9, block: 8.0, line: 34.0, average: 20.0},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 0, function: 15.3, block: 13.0, line: 27.8, average: 18.7},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 0, function: 17.5, block: 8.0, line: 20.1, average: 15.2},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0, function: 12.6, block: 9.0, line: 19.3, average: 13.6},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 0, function: 18.5, block: 8.0, line: 14.8, average: 13.8},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 0, function: 18.1, block: 13.0, line: 14.7, average: 15.3},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 0, function: 14.3, block: 6.0, line: 13.9, average: 11.4},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 0, function: 11.0, block: 16.0, line: 11.6, average: 12.9},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0, function: 8.4, block: 12.0, line: 12.3, average: 10.9},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 0, function: 7.8, block: 4.0, line: 11.8, average: 7.9},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 9.1, block: 1.9, line: 5.7, average: 5.6},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 0, function: 8.7, block: 5.0, line: 6.3, average: 6.7},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0, function: 8.0, block: 6.0, line: 3.9, average: 6.0},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0, function: 10.0, block: 0, line: 6.6, average: 8.3},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 0, line: 0, average: 0}
+            ],
+            html: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 38.7, line: 42.5, average: 40.6},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 0, function: 0, block: 33.8, line: 26.9, average: 30.3},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 0, function: 0, block: 38.8, line: 46.8, average: 42.8},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 42.0, line: 35.6, average: 38.8},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 35.3, line: 43.5, average: 39.4},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 40.1, line: 50.1, average: 45.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 35.9, line: 38.4, average: 37.1},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 0, function: 0, block: 35.5, line: 40.7, average: 38.1},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 0, function: 0, block: 27.2, line: 18.2, average: 22.7},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 0, function: 0, block: 40.7, line: 33.5, average: 37.1},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 0, function: 0, block: 32.9, line: 36.4, average: 34.6},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 0, function: 0, block: 39.3, line: 28.3, average: 33.8},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 0, function: 0, block: 27.7, line: 32.1, average: 29.9},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 0, function: 0, block: 6.9, line: 11.1, average: 9.0},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 0, function: 0, block: 30.7, line: 24.1, average: 27.4},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 0, function: 0, block: 18.6, line: 13.6, average: 16.1},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 0, function: 0, block: 33.7, line: 24.1, average: 28.9},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 0, function: 0, block: 29.6, line: 24.7, average: 27.1},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0, function: 0, block: 8.4, line: 4.3, average: 6.3},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 0, function: 0, block: 19.6, line: 14.6, average: 17.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 0, function: 0, block: 36.2, line: 28.9, average: 32.5},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 0, function: 0, block: 21.6, line: 19.8, average: 20.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 0, function: 0, block: 21.8, line: 16.5, average: 19.1},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 12.2, line: 7.5, average: 9.8},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 0, function: 0, block: 12.4, line: 4.0, average: 8.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 0, block: 15.2, line: 7.2, average: 11.2},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 0, function: 0, block: 11.9, line: 9.5, average: 10.7},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0, function: 0, block: 2.1, line: 1.7, average: 1.9},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0, function: 0, block: 3.2, line: 2.8, average: 3.0},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0, function: 0, block: 0, line: 0, average: 0}
+            ],
+            r: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 0, function: 25.9, block: 29.1, line: 0, average: 27.5},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 0, function: 21.7, block: 22.2, line: 0, average: 21.9},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 0, function: 24.9, block: 20.4, line: 0, average: 22.6},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 0, function: 21.2, block: 19.8, line: 0, average: 20.5},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 0, function: 23.9, block: 21.4, line: 0, average: 22.6},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0, function: 18.0, block: 21.3, line: 0, average: 19.6},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 0, function: 20.6, block: 22.9, line: 0, average: 21.8},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 0, function: 21.2, block: 23.5, line: 0, average: 22.4},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 0, function: 24.2, block: 18.0, line: 0, average: 21.1},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 0, function: 18.8, block: 22.0, line: 0, average: 20.4},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 0, function: 21.6, block: 21.5, line: 0, average: 21.6},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 0, function: 20.7, block: 17.8, line: 0, average: 19.2},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 0, function: 20.6, block: 16.8, line: 0, average: 18.7},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 0, function: 17.8, block: 15.4, line: 0, average: 16.6},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 0, function: 19.6, block: 16.9, line: 0, average: 18.2},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 0, function: 18.0, block: 17.1, line: 0, average: 17.6},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 0, function: 22.3, block: 15.6, line: 0, average: 18.9},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 0, function: 21.6, block: 16.7, line: 0, average: 19.1},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0, function: 21.5, block: 10.4, line: 0, average: 15.9},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 0, function: 20.6, block: 19.8, line: 0, average: 20.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 0, function: 15.4, block: 11.4, line: 0, average: 13.4},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 0, function: 19.2, block: 13.0, line: 0, average: 16.1},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 0, function: 18.8, block: 10.4, line: 0, average: 14.6},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0, function: 20.5, block: 10.0, line: 0, average: 15.2},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0, function: 15.6, block: 10.9, line: 0, average: 13.2},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 0, function: 22.6, block: 6.6, line: 0, average: 14.6},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 8.6, block: 3.2, line: 0, average: 5.9},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 0, function: 21.9, block: 5.5, line: 0, average: 13.7},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0, function: 12.5, block: 6.5, line: 0, average: 9.5},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0, function: 12.0, block: 7.1, line: 0, average: 9.6}
+            ],
+            rust: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 0, function: 29.2, block: 32.4, line: 36.5, average: 32.7},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 0, function: 32.3, block: 26.2, line: 30.6, average: 29.7},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 0, function: 28.5, block: 38.2, line: 35.0, average: 33.9},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 0, function: 28.7, block: 35.0, line: 59.0, average: 40.9},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 0, function: 33.3, block: 31.5, line: 28.9, average: 31.2},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0, function: 28.6, block: 29.8, line: 31.9, average: 30.1},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 0, function: 27.8, block: 27.6, line: 29.4, average: 28.3},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 0, function: 25.2, block: 23.8, line: 31.7, average: 26.9},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 0, function: 25.9, block: 29.1, line: 37.8, average: 30.9},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 0, function: 20.8, block: 26.5, line: 27.6, average: 25.0},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 0, function: 30.0, block: 20.5, line: 35.5, average: 28.7},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 0, function: 30.2, block: 25.9, line: 23.2, average: 26.4},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 0, function: 29.4, block: 34.0, line: 31.2, average: 31.5},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 0, function: 23.6, block: 24.6, line: 28.4, average: 25.5},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 0, function: 23.5, block: 22.6, line: 28.6, average: 24.9},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 0, function: 24.9, block: 19.2, line: 31.9, average: 25.3},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 0, function: 21.4, block: 22.2, line: 22.0, average: 21.9},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 0, function: 19.0, block: 23.3, line: 22.9, average: 21.7},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0, function: 22.2, block: 23.3, line: 28.4, average: 24.6},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 0, function: 27.0, block: 19.7, line: 25.8, average: 24.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 0, function: 21.5, block: 14.8, line: 33.5, average: 23.3},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 0, function: 22.4, block: 19.9, line: 28.2, average: 23.5},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 0, function: 22.5, block: 12.9, line: 26.8, average: 20.7},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0, function: 12.7, block: 19.9, line: 19.9, average: 17.5},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0, function: 13.0, block: 16.5, line: 25.7, average: 18.4},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 0, function: 9.2, block: 7.8, line: 11.7, average: 9.6},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 0, function: 12.4, block: 4.6, line: 6.5, average: 7.8},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 0, function: 9.7, block: 9.4, line: 11.4, average: 10.2},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 0, function: 7.3, block: 5.7, line: 4.5, average: 5.8},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 0, function: 6.0, block: 6.8, line: 6.8, average: 6.5}
+            ],
+            verilog: [
+                {name: 'Gemini-2.5-Pro', type: 'model-closed', size: '🔒', class: 10.4, function: 0, block: 0, line: 0, average: 10.4},
+                {name: 'DeepSeek-R1', type: 'model-open', size: '37/671B', class: 24.1, function: 0, block: 0, line: 0, average: 24.1},
+                {name: 'Qwen3-Coder-480B-A35B-Instruct', type: 'model-open', size: '480B', class: 4.7, function: 0, block: 0, line: 0, average: 4.7},
+                {name: 'claude-3-7-sonnet-thinking', type: 'model-closed', size: '🔒', class: 13.0, function: 0, block: 0, line: 0, average: 13.0},
+                {name: 'Gemini-2.5-Flash', type: 'model-closed', size: '🔒', class: 3.3, function: 0, block: 0, line: 0, average: 3.3},
+                {name: 'o4-mini', type: 'model-closed', size: '🔒', class: 0.2, function: 0, block: 0, line: 0, average: 0.2},
+                {name: 'claude-sonnet-4-20250514-thinking', type: 'model-closed', size: '🔒', class: 10.4, function: 0, block: 0, line: 0, average: 10.4},
+                {name: 'M2G-Eval-Coder-RL', type: 'model-ours', size: '8B', class: 8.2, function: 0, block: 0, line: 0, average: 8.2},
+                {name: 'DeepSeek-V3', type: 'model-open', size: '37/671B', class: 8.6, function: 0, block: 0, line: 0, average: 8.6},
+                {name: 'Qwen3-235B-A22B-Thinking-2507', type: 'model-open', size: '235B', class: 7.6, function: 0, block: 0, line: 0, average: 7.6},
+                {name: 'M2G-Eval-Coder-SFT', type: 'model-ours', size: '8B', class: 7.7, function: 0, block: 0, line: 0, average: 7.7},
+                {name: 'Qwen3-32B-Chat', type: 'model-open', size: '32B', class: 7.6, function: 0, block: 0, line: 0, average: 7.6},
+                {name: 'Qwen3-32B-Think', type: 'model-open', size: '32B', class: 7.5, function: 0, block: 0, line: 0, average: 7.5},
+                {name: 'Qwen3-30B-A3B-Thinking-2507', type: 'model-open', size: '30B', class: 16.9, function: 0, block: 0, line: 0, average: 16.9},
+                {name: 'QwQ-32B-Preview', type: 'model-open', size: '32B', class: 7.4, function: 0, block: 0, line: 0, average: 7.4},
+                {name: 'Qwen3-8B-Chat', type: 'model-open', size: '8B', class: 6.0, function: 0, block: 0, line: 0, average: 6.0},
+                {name: 'Qwen3-14B-Think', type: 'model-open', size: '14B', class: 7.2, function: 0, block: 0, line: 0, average: 7.2},
+                {name: 'Qwen3-14B-Chat', type: 'model-open', size: '14B', class: 6.7, function: 0, block: 0, line: 0, average: 6.7},
+                {name: 'Qwen3-30B-A3B-Instruct-2507', type: 'model-open', size: '30B', class: 0.8, function: 0, block: 0, line: 0, average: 0.8},
+                {name: 'Qwen3-8B-Think', type: 'model-open', size: '8B', class: 8.0, function: 0, block: 0, line: 0, average: 8.0},
+                {name: 'DeepSeek-R1-Distill-Qwen-32B', type: 'model-open', size: '32B', class: 3.8, function: 0, block: 0, line: 0, average: 3.8},
+                {name: 'DeepSeek-R1-Distill-70B', type: 'model-open', size: '70B', class: 2.2, function: 0, block: 0, line: 0, average: 2.2},
+                {name: 'DeepSeek-R1-Distill-Qwen-14B', type: 'model-open', size: '14B', class: 3.5, function: 0, block: 0, line: 0, average: 3.5},
+                {name: 'gpt-4o-2024-11-20', type: 'model-closed', size: '🔒', class: 0.2, function: 0, block: 0, line: 0, average: 0.2},
+                {name: 'o3-mini', type: 'model-closed', size: '🔒', class: 0.2, function: 0, block: 0, line: 0, average: 0.2},
+                {name: 'Qwen3-1.7B-Think', type: 'model-open', size: '1.7B', class: 4.7, function: 0, block: 0, line: 0, average: 4.7},
+                {name: 'DeepSeek-R1-Distill-Qwen-7B', type: 'model-open', size: '7B', class: 4.0, function: 0, block: 0, line: 0, average: 4.0},
+                {name: 'Qwen3-1.7B-Chat', type: 'model-open', size: '1.7B', class: 4.3, function: 0, block: 0, line: 0, average: 4.3},
+                {name: 'Qwen3-0.6B-Chat', type: 'model-open', size: '0.6B', class: 1.5, function: 0, block: 0, line: 0, average: 1.5},
+                {name: 'Qwen3-0.6B-Think', type: 'model-open', size: '0.6B', class: 1.3, function: 0, block: 0, line: 0, average: 1.3}
+            ]
+        };
+
+        // Global variables
+        let currentGranularity = 'class';
+        let currentLanguage = 'all';
+        let performanceChart = null;
+
+        // Select language function
+        function selectLanguage(language) {
+            currentLanguage = language;
+            updateDisplay();
+        }
+
+        // Select granularity function
+        function selectGranularity(granularity) {
+            currentGranularity = granularity;
+
+            // Update buttons
+            document.querySelectorAll('#classBtn, #functionBtn, #blockBtn, #lineBtn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(granularity + 'Btn').classList.add('active');
+
+            // Update title
+            const titles = {
+                'class': 'Class-Level Code Generation',
+                'function': 'Function-Level Code Generation',
+                'block': 'Block-Level Code Generation',
+                'line': 'Line-Level Code Generation'
+            };
+            document.getElementById('granularityTitle').textContent = titles[granularity];
+
+            updateDisplay();
+        }
+
+        // Update display function
+        function updateDisplay() {
+            // Get data for current language
+            const modelData = modelDataStore[currentLanguage] || modelDataStore.all;
+
+            // Sort by current granularity
+            const sortedData = [...modelData].sort((a, b) => b[currentGranularity] - a[currentGranularity]);
+
+            // Update table immediately (no chart dependency)
+            updateTable(sortedData);
+
+            // Update chart if available
+            if (typeof Chart !== 'undefined' && performanceChart) {
+                updateChart(sortedData);
+            }
+        }
+
+        // Update table function
+        function updateTable(data) {
+            const tbody = document.querySelector('#leaderboardTable tbody');
+            tbody.innerHTML = '';
+
+            data.forEach((model, index) => {
+                const row = tbody.insertRow();
+                row.className = model.type;
+
+                row.insertCell().textContent = index + 1;
+
+                const nameCell = row.insertCell();
+                nameCell.textContent = model.name;
+                if (index === 0) {
+                    nameCell.className = 'top-model';
+                } else if (model.type === 'model-ours') {
+                    nameCell.className = 'model-ours-name';
+                }
+
+                const typeCell = row.insertCell();
+                if (model.type === 'model-closed') typeCell.textContent = 'Closed';
+                else if (model.type === 'model-ours') typeCell.textContent = 'Ours';
+                else typeCell.textContent = 'Open';
+
+                row.insertCell().textContent = model.size;
+                row.insertCell().textContent = model.class ? model.class.toFixed(1) + '%' : '-';
+                row.insertCell().textContent = model.function ? model.function.toFixed(1) + '%' : '-';
+                row.insertCell().textContent = model.block ? model.block.toFixed(1) + '%' : '-';
+                row.insertCell().textContent = model.line ? model.line.toFixed(1) + '%' : '-';
+                row.insertCell().textContent = model.average.toFixed(1) + '%';
+            });
+        }
+
+        // Update chart function
+        function updateChart(data) {
+            if (!performanceChart) return;
+
+            const top10 = data.slice(0, 10);
+
+            performanceChart.data.labels = top10.map(d => d.name);
+            performanceChart.data.datasets[0].data = top10.map(d => d[currentGranularity]);
+
+            performanceChart.data.datasets[0].backgroundColor = top10.map(d => {
+                if (d.type === 'model-closed') return 'rgba(216, 238, 242, 0.6)';
+                if (d.type === 'model-ours') return 'rgba(223, 240, 216, 0.6)';
+                return 'rgba(253, 235, 221, 0.6)';
+            });
+
+            performanceChart.data.datasets[0].borderColor = top10.map(d => {
+                if (d.type === 'model-closed') return 'rgba(216, 238, 242, 1)';
+                if (d.type === 'model-ours') return 'rgba(223, 240, 216, 1)';
+                return 'rgba(253, 235, 221, 1)';
+            });
+
+            performanceChart.update();
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingMsg = document.getElementById('loadingMessage');
+
+            // Try to load Chart.js first
+            if (typeof Chart !== 'undefined') {
+                // Chart.js is already loaded, initialize chart first
+                console.log('Chart.js detected, initializing...');
+                initChart();
+                // Then update display with chart
+                updateDisplay();
+            } else {
+                // Chart.js not loaded yet - show warning
+                console.warn('Chart.js not detected, attempting dynamic load...');
+                if (loadingMsg) {
+                    loadingMsg.textContent = 'Chart.js library not loaded. Attempting dynamic load...';
+                    loadingMsg.style.color = '#ffc107';  // Warning color
+                    loadingMsg.style.display = 'block';  // Make sure it's visible
+                }
+
+                // Show table first
+                updateDisplay();
+
+                // Try loading Chart.js dynamically
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                script.onload = function() {
+                    // Chart loaded successfully, initialize it
+                    console.log('Chart.js loaded dynamically, initializing...');
+                    initChart();
+                    // Update display again to show chart
+                    updateDisplay();
+                };
+                script.onerror = function() {
+                    // Chart loading failed, update message
+                    const loadingMsg = document.getElementById('loadingMessage');
+                    if (loadingMsg) {
+                        loadingMsg.textContent = 'Chart loading failed. Data table is available below.';
+                        loadingMsg.style.color = '#dc3545';
+                        loadingMsg.style.display = 'block';  // Ensure message is visible
+                    }
+                };
+                document.head.appendChild(script);
+
+                // Add timeout for Chart.js loading
+                setTimeout(function() {
+                    const loadingMsg = document.getElementById('loadingMessage');
+                    if (loadingMsg && loadingMsg.textContent === 'Loading chart...') {
+                        loadingMsg.textContent = 'Chart loading timeout. Data table is available below.';
+                        loadingMsg.style.color = '#dc3545';
+                        loadingMsg.style.display = 'block';  // Ensure message is visible
+                    }
+                }, 5000); // 5 second timeout
+            }
+        });
+
+        // Initialize chart
+        function initChart() {
+            const canvas = document.getElementById('performanceChart');
+            const loadingMsg = document.getElementById('loadingMessage');
+
+            if (!canvas) {
+                console.error('Canvas element not found');
+                return;
+            }
+
+            try {
+                const ctx = canvas.getContext('2d');
+                performanceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Edit Similarity (%)',
+                            data: [],
+                            backgroundColor: [],
+                            borderColor: [],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Hide loading message after successful chart creation
+                if (loadingMsg) {
+                    loadingMsg.style.display = 'none';
+                }
+
+                // Ensure chart container is visible
+                canvas.style.display = 'block';
+
+                console.log('Chart initialized successfully');
+            } catch (error) {
+                console.error('Error initializing chart:', error);
+                if (loadingMsg) {
+                    loadingMsg.textContent = 'Chart initialization failed. Data table is available below.';
+                    loadingMsg.style.color = '#dc3545';
+                    loadingMsg.style.display = 'block';  // Ensure message is visible
+                }
+            }
+        }
+    </script>
+</body>
+</html>

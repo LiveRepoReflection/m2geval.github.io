@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M²G-Eval: Multi-granularity Multilingual Code Generation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding-top: 20px;
+        }
+        .paper-icon {
+            max-width: 100px;
+            margin-bottom: 20px;
+        }
+        .abstract {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .navbar {
+            margin-bottom: 30px;
+        }
+        .feature-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .authors {
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        .footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .figure-container {
+            margin-bottom: 30px;
+        }
+        .figure-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="home.html">M²G-Eval</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="home.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Leaderboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-8 offset-md-2 text-center">
+                <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                    <h4 class="mb-4" style="padding-top: 0px; margin-bottom: 0px;">
+                        M²G-Eval: Enhancing and Evaluating Multi-granularity Multilingual Code Generation
+                    </h4>                
+                </div>
+                <div class="authors">
+                    Fanglin Xu, Wei Zhang, Jian Yang, Guo Chen, Ruihao Gong, Aishan Liu, Xianglong Liu, Weifeng Lv<br>
+                </div>
+                <div class="d-flex justify-content-center gap-1 mb-0">
+                    <a href="https://m2geval.github.io/home.html" class="btn btn-outline-secondary">🏠 Project Page</a>
+                    <a href="./index.html" class="btn btn-outline-secondary">🏆 Leaderboard</a>
+                    <a href="https://github.com/LiveRepoReflection/m2geval-project" class="btn btn-outline-secondary">🐳 GitHub</a>
+                    <a href="https://huggingface.co/datasets/Tswatery/m2geval" class="btn btn-outline-secondary">✅ Eval Dataset</a>
+                    <a href="https://huggingface.co/datasets/Tswatery/m2geval-instruction" class="btn btn-outline-secondary">📊 Training Dataset</a>
+
+                    <a href="#" class="btn btn-outline-secondary">📄 Paper (Coming Soon)</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="abstract">
+                    <h3>Abstract</h3>
+                    <p>
+                        We introduce M²G-Eval, a multi-granularity, multilingual framework for evaluating code generation in large language models (LLMs) across four levels: Class, Function, Block, and Line. Spanning 18 programming languages, M²G-Eval includes 17K+ training tasks and 1,286 human-annotated, contamination-controlled test instances. We develop M²G-Eval-Coder models by training Qwen3-8B with supervised fine-tuning and Group Relative Policy Optimization. Evaluating 30 models (28 state-of-the-art LLMs plus our two M²G-Eval-Coder variants) reveals three main findings: (1) an apparent difficulty hierarchy, with Line-level tasks easiest and Class-level most challenging; (2) widening performance gaps between full- and partial-granularity languages as task complexity increases; and (3) strong cross-language correlations, suggesting that models learn transferable programming concepts. M²G-Eval enables fine-grained diagnosis of code generation capabilities and highlights persistent challenges in synthesizing complex, long-form code.
+                    </p>
+                </div>
+
+                <h2>Overview</h2>
+                <p>
+                    M²G-Eval represents a paradigm shift in code generation evaluation by introducing multi-granularity assessment. Unlike existing benchmarks that focus primarily on function-level generation, our framework systematically evaluates code generation capabilities across four granularity levels - from single lines to complete classes. This comprehensive approach reveals the true complexity spectrum of code generation tasks and provides deeper insights into model capabilities. The framework leverages Tree-Sitter for precise AST parsing, BM25 for intelligent cross-file context retrieval, and employs Length-Normalized Edit Similarity as the primary evaluation metric, ensuring fair comparison across different code scales and languages.
+                </p>
+
+                <div class="figure-container text-center">
+                    <img src="assets/intro.png" alt="M²G-Eval provides more challenging, multi-granularity code generation across more programming languages than previous work." width="50%">
+                    <p class="mt-2"><strong></strong> M²G-Eval provides more challenging, multi-granularity code generation across more programming languages than previous work.</p>
+                </div>
+
+                <div class="row mt-5 mb-4">
+                    <div class="col-md-6">
+                    <div class="feature-box">
+                            <h3>M²G-Eval Evaluation Dataset</h3>
+                            <p>
+                                A multi-granularity evaluation framework featuring 1,286 human-verified test cases across four code generation levels (Class, Function, Block, Line). Covers 18 programming languages including 11 full-granularity languages and 7 partial-granularity languages, ensuring comprehensive assessment of code generation capabilities.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-box">
+                            <h3>M²G-Eval-Instruct Dataset</h3>
+                            <p>
+                                A large-scale training dataset with 17,000+ high-quality tasks derived from 150K+ code repositories. Leverages Tree-Sitter for precise AST parsing and BM25 algorithm for intelligent cross-file context retrieval, providing comprehensive training data for multi-granularity code generation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-5">
+                    <div class="col-md-6">
+                        <div class="feature-box">
+                            <h3>M²G-Eval-Coder Models</h3>
+                            <p>
+                                Advanced code generation models based on Qwen3-8B, trained through two-stage optimization: Supervised Fine-Tuning (SFT) and Group Relative Policy Optimization (GRPO). Both M²G-Eval-Coder-SFT and M²G-Eval-Coder-RL achieve competitive performance among open-source models.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-box">
+                            <h3>Comprehensive Evaluation</h3>
+                            <p>
+                                Systematic evaluation of 30 state-of-the-art LLMs using Length-Normalized Edit Similarity metric. Our analysis reveals clear difficulty hierarchies (Line < Block < Function < Class) and cross-language generalization patterns, providing crucial insights for code generation research.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Key Contributions</h2>
+                <ul class="list-group mb-5">
+                    <li class="list-group-item">
+                        <strong>Multi-Granularity Framework</strong>: First systematic evaluation framework for code generation across four distinct granularity levels (Class, Function, Block, Line), revealing clear difficulty hierarchies and providing deeper insights into model capabilities across different code scales.
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Comprehensive Language Coverage</strong>: Extensive support for 18 programming languages categorized into full-granularity (11 languages) and partial-granularity (7 languages) groups, enabling thorough assessment of cross-language generalization abilities.
+                    </li>
+                    <li class="list-group-item">
+                        <strong>High-Quality Datasets</strong>: M²G-Eval test set with 1,286 human-verified instances ensuring quality and appropriate difficulty, plus M²G-Eval-Instruct training dataset with 17,000+ tasks from 150K+ repositories using advanced AST parsing and retrieval techniques.
+                    </li>
+                    <li class="list-group-item">
+                        <strong>State-of-the-Art Models</strong>: Development of M²G-Eval-Coder through innovative two-stage training (SFT + GRPO), achieving competitive performance among open-source models and demonstrating the effectiveness of our multi-granularity approach.
+                    </li>
+                </ul>
+
+                <h2>Dataset Construction Pipeline</h2>
+                <div class="figure-container text-center">
+                    <img src="assets/figure2.png" alt="Dataset construction pipeline for M²G-Eval-Instruct." width="100%">
+                    <p class="mt-2"><strong></strong> Dataset construction pipeline for M²G-Eval-Instruct.</p>
+                </div>
+                <p>
+                    Our automatic dataset construction pipeline ensures high-quality training and evaluation data:
+                </p>
+                <ol>
+                    <li>
+                        <strong>Repository Collection</strong>: Sampling 150K+ high-quality repositories from TheStack-v2, filtered for code quality and diversity.
+                    </li>
+                    <li>
+                        <strong>AST-based Code Extraction</strong>: Using Tree-Sitter for precise syntax tree parsing to extract code segments at different granularities.
+                    </li>
+                    <li>
+                        <strong>Cross-file Context Retrieval</strong>: Employing BM25 algorithm to intelligently retrieve relevant cross-file dependencies and context.
+                    </li>
+                    <li>
+                        <strong>Task Generation</strong>: Creating multi-granularity tasks with LLM-generated descriptions and appropriate difficulty levels.
+                    </li>
+                    <li>
+                        <strong>Quality Verification</strong>: Rigorous filtering and human annotation by 10 graduate/PhD students to ensure correctness.
+                    </li>
+                </ol>
+
+                <h2>Granularity Levels</h2>
+                <div class="figure-container text-center">
+                    <img src="assets/figure3.png" alt="Multi-granularity task examples and difficulty hierarchy." width="70%">
+                    <p class="mt-2"><strong></strong> Multi-granularity task examples and difficulty hierarchy in M²G-Eval.</p>
+                </div>
+
+                <h2>Dataset Task Count</h2>
+                <div class="figure-container text-center">
+                    <img src="assets/taskcount.png" alt="Task count of train and test dataset." width="80%">
+                    <p class="mt-2"><strong></strong> Task count of train and test dataset. The Y-axis is logarithmic; the left side of the dashed line is a partial-granularity group, and the right side is a full-granularity group. The same applies below.</p>
+                </div>
+
+                <h2>Cross-Language Analysis</h2>
+                <div class="figure-container text-center">
+                    <img src="assets/language_correlation_clustered_heapmap.png" alt="Cross-language generalization patterns and Pearson correlation." width="60%">
+                    <p class="mt-2"><strong></strong> Cross-language generalization patterns showing strong correlation across programming languages.</p>
+                </div>
+
+                <h2>Evaluation Results</h2>
+                <div class="figure-container text-center">
+                    <img src="assets/language_density_boxplot.png" alt="Performance comparison of 30 LLMs across different granularities." width="100%">
+                    <p class="mt-2"><strong></strong> Performance comparison of 30 LLMs across different granularities using Length-Normalized Edit Similarity.</p>
+                </div>
+
+                <div class="text-center mt-5 mb-5">
+                    <a href="index.html" class="btn btn-lg btn-primary">View Leaderboard Results</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="text-center">
+                <p>M²G-Eval: Multi-granularity Multilingual Code Generation Evaluation</p>
+                <p><a href="https://m2geval.github.io">https://m2geval.github.io</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
